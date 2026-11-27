@@ -565,9 +565,9 @@ body.flash::after {
   border-radius: 18px;
   background: #000;
 }
-/* Źródło obrazu musi być na stronie, ale nie jest pokazywane */
-#camera-video { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
-#camera-canvas { display: block; width: 100%; height: 100%; object-fit: contain; }
+/* Źródło obrazu i płótno nagrania muszą być na stronie, ale nie są pokazywane */
+#camera-video, #camera-canvas { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+#camera-preview { display: block; width: 100%; height: 100%; object-fit: contain; }
 .camera-bar { position: absolute; top: 6px; left: 6px; right: 6px; display: flex; align-items: center; gap: 6px; font-size: 0.85rem; }
 #camera-state {
   margin-right: auto;
@@ -591,7 +591,7 @@ body.flash::after {
 .readings:has(#camera:not([hidden])) .panel h1,
 .readings:has(#camera:not([hidden])) .stats dt { display: none; }
 
-#map-hide, #map-show { display: none; }
+#map-hide, #map-show, #camera-off { display: none; }
 
 /* ---------- Ekran startowy (zawsze w barwach marki) ---------- */
 
@@ -643,27 +643,37 @@ body.flash::after {
 /* ---------- Poziomo: odczyty po lewej, mapa po prawej ---------- */
 
 @media (orientation: landscape) {
-  /* Na ekranie pomiaru przyciski leżą przy lewej krawędzi, żeby zyskać wysokość */
+  :root {
+    --toggle: max(50px, 13vh);
+    --edge-top: calc(8px + var(--top));
+    --edge-bottom: calc(8px + var(--bottom));
+    --edge-right: calc(8px + var(--right));
+    --column: 38vw;                                   /* szerokość lewej kolumny */
+    --right-start: calc(var(--column) + 18px + var(--left));
+  }
+
+  /* Menu i motyw leżą w jednym rzędzie z przyciskiem START/STOP */
   body[data-view="measure"] header {
     position: fixed;
     z-index: 10;
-    flex-direction: column;
-    height: auto;
-    top: 0;
-    left: 0;
-    padding: calc(10px + var(--top)) 0 0 calc(8px + var(--left));
+    top: auto;
+    bottom: var(--edge-bottom);
+    left: calc(8px + var(--left));
+    gap: 6px;
+    height: var(--toggle);
+    padding: 0;
   }
   body[data-view="measure"] #title { display: none; }
-  body[data-view="measure"] header button { width: 40px; height: 40px; }
+  body[data-view="measure"] #menu-button,
+  body[data-view="measure"] #theme-toggle { width: 46px; height: var(--toggle); }
   header { height: calc(52px + var(--top)); }
 
   #view-measure {
+    position: relative;
     flex-direction: row;
-    gap: 10px;
-    padding: calc(8px + var(--top)) calc(8px + var(--right)) calc(8px + var(--bottom)) calc(56px + var(--left));
+    padding: var(--edge-top) var(--edge-right) var(--edge-bottom) calc(8px + var(--left));
   }
-  .readings { flex: 0 0 38%; gap: 6px; }
-  #view-measure .map-box { display: block; flex: 1; }
+  .readings { flex: 0 0 var(--column); gap: 6px; }
   .panel { padding: 6px 10px; }
   .panel.current { flex: 1.7; }
   .current h1 { display: none; }
@@ -672,44 +682,75 @@ body.flash::after {
   .stats { padding-top: 2px; }
   .stats dt { display: none; }
   .stats dd { font-size: 0.9rem; }
-  #toggle { height: max(50px, 13vh); font-size: 1.25rem; }
+  #toggle { height: var(--toggle); margin-left: 104px; font-size: 1.2rem; }
+  body[data-right="none"] .readings { flex: 1; margin-right: 52px; }
 
-  #map-hide, #map-show { display: block; font-weight: 700; color: var(--gold); }
+  /* ---------- Prawa strona: mapa, kamera albo obie po połowie ---------- */
+
+  #view-measure .map-box, #camera:not(.full), #camera-off {
+    position: absolute;
+    top: var(--edge-top);
+    bottom: var(--edge-bottom);
+    left: var(--right-start);
+    right: var(--edge-right);
+  }
+  body[data-right="map"] #view-measure .map-box,
+  body[data-right="split"] #view-measure .map-box { display: block; }
+  body[data-right="split"] #view-measure .map-box { bottom: calc(50% + 4px); }
+  #camera:not(.full) { width: auto; height: auto; }
+  body[data-right="split"] #camera:not(.full) { top: calc(50% + 4px); }
+  body.map-hidden #camera:not(.full) { right: calc(var(--edge-right) + 52px); }
+  /* Niewidoczny podgląd zostaje na stronie, żeby nagrywanie trwało */
+  body[data-right="map"] #camera:not(.full),
+  body[data-right="none"] #camera:not(.full) { top: auto; left: auto; width: 1px; height: 1px; border: 0; opacity: 0; visibility: hidden; }
+
+  body[data-right="off"] #camera-off {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px;
+    border: 1px dashed var(--line);
+    border-radius: var(--radius);
+    color: var(--muted);
+    text-align: center;
+  }
+  #camera-off a { color: var(--blue); }
+
+  #map-hide, #map-show { font-weight: 700; color: var(--gold); }
   #map-hide {
+    display: block;
     position: absolute;
     z-index: 1000;
     top: 50%;
     left: 0;
     width: 34px;
-    height: 72px;
+    height: min(72px, 70%);
     transform: translateY(-50%);
     border-radius: 0 14px 14px 0;
     font-size: 1.8rem;
     box-shadow: var(--shadow);
   }
   #map-hide:active { transform: translateY(-50%); }
-  #map-show { display: none; align-self: center; flex: none; width: 44px; height: 120px; writing-mode: vertical-rl; }
-  body.map-hidden #view-measure .map-box { display: none; }
-  body.map-hidden #map-show { display: block; }
-  body.map-hidden .readings { flex: 1; }
-
-  /* Podgląd kamery w rogu; po schowaniu mapy zajmuje prawą połowę */
-  #camera:not(.full) {
-    position: fixed;
-    z-index: 5;
-    right: calc(16px + var(--right));
-    bottom: calc(30px + var(--bottom));
-    width: 32vw;
-    height: 40vh;
-    box-shadow: var(--shadow);
+  /* Na niskiej mapie przycisk schodzi na dół, żeby nie zasłaniać przybliżania */
+  body[data-right="split"] #map-hide { top: auto; bottom: 8px; height: 44px; transform: none; }
+  #map-show {
+    position: absolute;
+    top: calc(50% - 60px);
+    right: var(--edge-right);
+    width: 44px;
+    height: 120px;
+    writing-mode: vertical-rl;
   }
-  body.map-hidden .readings:has(#camera:not([hidden])) { padding-right: 46%; }
-  body.map-hidden #camera:not(.full) { right: calc(64px + var(--right)); bottom: calc(8px + var(--bottom)); width: 42vw; height: 72vh; }
+  #map-show:active { transform: none; }
+  body.map-hidden #map-show { display: block; }
+
   #camera.full .camera-bar { top: calc(52px + var(--top)); }
 
-  /* Ostrzeżenie leży nad mapą i nie zasłania prędkości */
-  #alert { left: calc(38% + 100px); right: calc(124px + var(--right)); top: calc(14px + var(--top)); }
-  body.map-hidden #alert { left: calc(64px + var(--left)); right: calc(8px + var(--right)); }
+  /* Ostrzeżenie leży po prawej i nie zasłania prędkości */
+  #alert { left: calc(var(--right-start) + 52px); right: calc(112px + var(--right)); top: calc(14px + var(--top)); }
+  body[data-right="none"] #alert { left: calc(8px + var(--left)); right: calc(8px + var(--right)); }
 
   #view-replay { flex-direction: row; padding-bottom: calc(8px + var(--bottom)); }
   #view-replay .map-box { order: 0; }

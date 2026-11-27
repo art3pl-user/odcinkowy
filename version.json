@@ -1,11 +1,9 @@
 {
-  "version": "2.1.0",
+  "version": "2.2.0",
   "date": "2026-11-27",
   "notes": [
-    "Nagranie z kamery jest zawsze poziome",
-    "Czytelniejsza, bardziej zwarta Konfiguracja z nowymi listami wyboru",
-    "Pętla nagrań: 1, 5, 10, 15 lub 25 poprzednich nagrań",
-    "Opis wykrywania uderzenia pod przyciskiem „i”",
-    "Przyciski na dole ekranu nie chowają się już za belką telefonu"
+    "W poziomie wybierzesz po prawej: mapę, kamerę albo obie naraz",
+    "W poziomie przyciski menu i motywu są obok START/STOP",
+    "W pionie podgląd z kamery nie powtarza prędkości i średniej (nagranie nadal je zawiera)"
   ]
 }

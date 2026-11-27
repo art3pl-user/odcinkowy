@@ -74,16 +74,33 @@
 
   // ---------- Mapa ----------
 
-  // Schowana mapa zostawia całe miejsce na odczyty
+  // Co widać po prawej stronie w poziomie:
+  // map, camera, split (mapa nad kamerą), off (kamera wyłączona) albo none
+  function rightContent() {
+    const { rightSide, mapHidden } = Storage_.settings();
+    const mapShown = rightSide !== 'camera' && !mapHidden;
+    const cameraShown = rightSide !== 'map' && !el('camera').hidden;
+    if (mapShown) return cameraShown ? 'split' : 'map';
+    if (cameraShown) return 'camera';
+    return rightSide === 'camera' ? 'off' : 'none';
+  }
+
+  function layout() {
+    const { rightSide, mapHidden } = Storage_.settings();
+    document.body.dataset.right = rightContent();
+    // Przycisk przywracania ma sens tylko wtedy, gdy mapa jest częścią układu
+    document.body.classList.toggle('map-hidden', mapHidden && rightSide !== 'camera');
+    requestAnimationFrame(updateMap);
+  }
+
   function setMapHidden(hidden) {
     Storage_.setSetting('mapHidden', hidden);
-    document.body.classList.toggle('map-hidden', hidden);
-    if (!hidden) requestAnimationFrame(updateMap);
+    layout();
   }
 
   // Mapa jest widoczna tylko w poziomie; w pionie i po schowaniu nie pobieramy kafelków
   function updateMap() {
-    if (!landscape.matches || el('view-measure').hidden || Storage_.settings().mapHidden) return;
+    if (!landscape.matches || el('view-measure').hidden || !['map', 'split'].includes(rightContent())) return;
     if (!map) {
       map = UI.createMap(mapEl);
       line = L.polyline(routeOnMap, { color: '#1565c0', weight: 5 }).addTo(map);
@@ -339,7 +356,7 @@
 
   root.Measure = {
     init() {
-      document.body.classList.toggle('map-hidden', Boolean(Storage_.settings().mapHidden));
+      layout();
       Database.onChange((list) => {
         sections = list;
         watcher.setSections(list);
@@ -351,6 +368,7 @@
       setInterval(render, 500);
     },
     show: updateMap,
+    layout,
     correction: () => correction,
     setCorrection(value) {
       correction = Route.clampCorrection(value);

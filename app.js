@@ -98,6 +98,23 @@
   approach.addEventListener('change', () => Storage_.setSetting('approachM', Number(approach.value)));
   el('alert-test').addEventListener('click', Alerts.test);
 
+  const sideButtons = document.querySelectorAll('[data-side-choice]');
+  function showSide() {
+    for (const button of sideButtons) {
+      button.setAttribute('aria-pressed', String(button.dataset.sideChoice === Storage_.settings().rightSide));
+    }
+  }
+  for (const button of sideButtons) {
+    button.addEventListener('click', () => {
+      Storage_.setSetting('rightSide', button.dataset.sideChoice);
+      // Wybór układu z mapą przywraca ją, nawet jeśli była schowana
+      Storage_.setSetting('mapHidden', false);
+      showSide();
+      Measure.layout();
+    });
+  }
+  showSide();
+
   const recording = el('setting-recording');
   recording.checked = Boolean(Storage_.settings().recording);
   recording.addEventListener('change', () => {

@@ -17,6 +17,9 @@
   const canvas = el('camera-canvas');
   const context = canvas.getContext('2d');
   const video = el('camera-video');
+  const preview = el('camera-preview');
+  const previewContext = preview.getContext('2d');
+  const portrait = window.matchMedia('(orientation: portrait)');
   const saveButton = el('camera-save');
 
   let stream = null;
@@ -40,36 +43,43 @@
 
   // ---------- Obraz z pomiarami ----------
 
-  function draw() {
-    const { width, height } = canvas;
+  function render(target, data, showSpeed) {
+    const { width, height } = target.canvas;
     // Wypełniamy cały poziomy kadr; z obrazu pionowego bierzemy środkowy pas
     const scale = Math.max(width / video.videoWidth, height / video.videoHeight);
     const cropWidth = width / scale;
     const cropHeight = height / scale;
-    context.drawImage(video,
+    target.drawImage(video,
       (video.videoWidth - cropWidth) / 2, (video.videoHeight - cropHeight) / 2, cropWidth, cropHeight,
       0, 0, width, height);
 
     const unit = Math.min(width, height) / 18;
-    const data = Measure.overlay();
     const lines = [
       { size: unit * 1.2, text: Date.now() < impactLabel.until ? impactLabel.text : '' },
-      { size: unit * 1.7, text: data.speed + ' km/h    średnia ' + data.average + ' km/h' },
+      { size: unit * 1.7, text: showSpeed ? data.speed + ' km/h    średnia ' + data.average + ' km/h' : '' },
       { size: unit * 0.85, text: data.measurement },
       { size: unit * 0.75, text: data.date + (data.position ? '    ' + data.position : '') },
     ].filter((line) => line.text);
     const barHeight = lines.reduce((sum, line) => sum + line.size * 1.25, unit * 0.5);
 
-    context.fillStyle = 'rgba(0, 0, 0, 0.55)';
-    context.fillRect(0, height - barHeight, width, barHeight);
-    context.fillStyle = '#fff';
-    context.textBaseline = 'top';
+    target.fillStyle = 'rgba(0, 0, 0, 0.55)';
+    target.fillRect(0, height - barHeight, width, barHeight);
+    target.fillStyle = '#fff';
+    target.textBaseline = 'top';
     let y = height - barHeight + unit * 0.35;
     for (const line of lines) {
-      context.font = '600 ' + Math.round(line.size) + 'px system-ui, sans-serif';
-      context.fillText(line.text, unit * 0.5, y, width - unit);
+      target.font = '600 ' + Math.round(line.size) + 'px system-ui, sans-serif';
+      target.fillText(line.text, unit * 0.5, y, width - unit);
       y += line.size * 1.25;
     }
+  }
+
+  // Nagranie zawsze ma komplet pomiarów. W pionie prędkość i średnia są duże
+  // na ekranie, więc podgląd ich nie powtarza.
+  function draw() {
+    const data = Measure.overlay();
+    render(context, data, true);
+    render(previewContext, data, !portrait.matches);
   }
 
   // ---------- Klipy ----------
@@ -173,6 +183,7 @@
     video.srcObject = null;
     box.hidden = true;
     setFull(false);
+    Measure.layout();
   }
 
   function fail(text) {
@@ -212,6 +223,7 @@
         if (mine === generation) fail('Kamera została wyłączona przez telefon');
       });
       box.hidden = false;
+      Measure.layout();
       showSaved();
       el('recording-state').textContent = '';
       navigator.storage?.persist?.().catch(() => {});
@@ -267,7 +279,7 @@
 
   saveButton.addEventListener('click', save);
   el('camera-size').addEventListener('click', () => setFull(!box.classList.contains('full')));
-  canvas.addEventListener('click', () => setFull(!box.classList.contains('full')));
+  preview.addEventListener('click', () => setFull(!box.classList.contains('full')));
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') setFull(false);
   });
