@@ -27,6 +27,7 @@
   <nav id="menu">
     <a href="#pomiar" data-tab="measure">Odcinkowy pomiar</a>
     <a href="#historia" data-tab="history">Historia</a>
+    <a href="#nagrania" data-tab="recordings">Nagrania</a>
     <a href="#odcinki" data-tab="database">Baza odcinków</a>
     <a href="#konfiguracja" data-tab="settings">Konfiguracja</a>
   </nav>
@@ -52,13 +53,25 @@
         <p class="details"><span id="distance">0,00 km</span> · <span id="time">00:00</span></p>
       </section>
 
+      <div id="camera" hidden>
+        <video id="camera-video" muted playsinline></video>
+        <canvas id="camera-canvas" aria-label="Widok z kamery"></canvas>
+        <div class="camera-bar">
+          <span id="camera-state">● REC</span>
+          <button id="camera-save" type="button">Zapisz</button>
+          <button id="camera-size" type="button" aria-label="Pełny ekran">⛶</button>
+        </div>
+      </div>
+
       <button id="toggle" type="button" disabled>START</button>
     </div>
 
     <div class="map-box">
       <div id="live-map" class="map"></div>
       <button id="center" type="button" hidden>Wyśrodkuj</button>
+      <button id="map-hide" type="button" aria-label="Schowaj mapę">›</button>
     </div>
+    <button id="map-show" type="button" aria-label="Pokaż mapę">‹ Mapa</button>
   </main>
 
   <main id="view-history" hidden>
@@ -91,6 +104,22 @@
     </div>
     <div class="map-box">
       <div id="replay-map" class="map"></div>
+    </div>
+  </main>
+
+  <main id="view-recordings" hidden>
+    <div class="column">
+      <div id="clip-panel" class="column" hidden>
+        <video id="clip-player" controls playsinline></video>
+        <p id="clip-title" class="note"></p>
+        <button id="clip-export" class="action primary" type="button">Zapisz w telefonie</button>
+        <div class="row">
+          <button id="clip-keep" class="action" type="button">Zachowaj</button>
+          <button id="clip-delete" class="action danger" type="button">Usuń</button>
+        </div>
+      </div>
+      <p id="clips-info" class="note"></p>
+      <ul id="clip-list"></ul>
     </div>
   </main>
 
@@ -136,6 +165,28 @@
         </select></label>
       <button id="alert-test" class="action" type="button">Sprawdź sygnał</button>
 
+      <h2>Wideorejestrator</h2>
+      <label class="check"><input id="setting-recording" type="checkbox">
+        <span>Nagrywaj wideo w pętli, gdy aplikacja jest otwarta (bez dźwięku)</span></label>
+      <label class="check">
+        <span>Długość jednego nagrania</span>
+        <select id="setting-clip">
+          <option value="1">1 min</option>
+          <option value="3">3 min</option>
+          <option value="5">5 min</option>
+          <option value="10">10 min</option>
+        </select></label>
+      <label class="check">
+        <span>Pętla: ile poprzednich nagrań trzymać</span>
+        <select id="setting-loop">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="5">5</option>
+          <option value="11">11</option>
+        </select></label>
+      <p id="recording-state" class="preview" role="status"></p>
+      <p class="note">Minuta nagrania zajmuje około 19 MB. Starsze nagrania są usuwane, chyba że naciśniesz „Zapisz” przy podglądzie lub „Zachowaj” w zakładce Nagrania. Nagrywanie zatrzymuje się po zminimalizowaniu aplikacji.</p>
+
       <h2>Korekta prędkości</h2>
       <div class="stepper">
         <button id="correction-minus" type="button" aria-label="Zmniejsz o 1 km/h">−</button>
@@ -159,6 +210,9 @@
   <script src="alerts.js"></script>
   <script src="database.js"></script>
   <script src="measure.js"></script>
+  <script src="videostore.js"></script>
+  <script src="recorder.js"></script>
+  <script src="recordings.js"></script>
   <script src="history.js"></script>
   <script src="app.js"></script>
 </body>

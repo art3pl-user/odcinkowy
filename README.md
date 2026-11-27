@@ -36,6 +36,9 @@ Przykład wpisu (jeden kierunek jazdy):
 
 ### Dla opiekuna bazy
 
+- Przegląd zgłoszeń: https://art3pl-user.github.io/odcinkowy/zgloszenia/
+  Hasło ustawia `node tools/set_password.js` (potem commit i push pliku `zgloszenia/auth.json`).
+  To tylko zasłona strony: zgłoszenia są publiczne w repozytorium, a skrót hasła jest jawny.
 - Przyjęcie zgłoszenia: wklej obiekt z Issue do tablicy `sections` w `data/odcinki-wlasne.json`.
 - Sprawdzenie plików: `node tools/check_data.js`
 - Aktualizacja z OpenStreetMap: `python3 tools/update_osm.py`

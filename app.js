@@ -10,6 +10,7 @@
     measure: 'Odcinkowy pomiar',
     history: 'Historia',
     replay: 'Trasa',
+    recordings: 'Nagrania',
     database: 'Baza odcinków',
     settings: 'Konfiguracja',
   };
@@ -34,10 +35,13 @@
     const [tab, id] = location.hash.slice(1).split('/');
     let view = 'measure';
     if (tab === 'historia') view = id ? 'replay' : 'history';
+    else if (tab === 'nagrania') view = 'recordings';
     else if (tab === 'odcinki') view = 'database';
     else if (tab === 'konfiguracja') view = 'settings';
 
     History_.leave();
+    Recordings.leave();
+    if (view !== 'measure') Recorder.minimize();
     for (const name of Object.keys(titles)) el('view-' + name).hidden = name !== view;
     el('title').textContent = titles[view];
     document.body.dataset.view = view;
@@ -51,6 +55,7 @@
     if (view === 'measure') Measure.show();
     if (view === 'history') History_.showList();
     if (view === 'replay') History_.showTrip(id);
+    if (view === 'recordings') Recordings.refresh();
     if (view === 'database') Database.render();
     if (view === 'settings') renderSettings();
   }
@@ -87,6 +92,15 @@
   approach.addEventListener('change', () => Storage_.setSetting('approachM', Number(approach.value)));
   el('alert-test').addEventListener('click', Alerts.test);
 
+  const recording = el('setting-recording');
+  recording.checked = Boolean(Storage_.settings().recording);
+  recording.addEventListener('change', () => Recorder.setEnabled(recording.checked));
+  for (const [id, name] of [['setting-clip', 'clipMinutes'], ['setting-loop', 'loopClips']]) {
+    const select = el(id);
+    select.value = String(Storage_.settings()[name]);
+    select.addEventListener('change', () => Storage_.setSetting(name, Number(select.value)));
+  }
+
   setInterval(() => {
     if (!el('view-settings').hidden) renderSettings();
   }, 1000);
@@ -103,6 +117,7 @@
       Database.load().catch(console.error);
       Measure.init();
       route();
+      Recorder.init();
       el('toggle').disabled = false;
     });
 })();

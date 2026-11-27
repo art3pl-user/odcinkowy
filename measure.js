@@ -66,9 +66,16 @@
 
   // ---------- Mapa ----------
 
-  // Mapa jest widoczna tylko w poziomie; w pionie nie pobieramy kafelków
+  // Schowana mapa zostawia całe miejsce na odczyty
+  function setMapHidden(hidden) {
+    Storage_.setSetting('mapHidden', hidden);
+    document.body.classList.toggle('map-hidden', hidden);
+    if (!hidden) requestAnimationFrame(updateMap);
+  }
+
+  // Mapa jest widoczna tylko w poziomie; w pionie i po schowaniu nie pobieramy kafelków
   function updateMap() {
-    if (!landscape.matches || el('view-measure').hidden) return;
+    if (!landscape.matches || el('view-measure').hidden || Storage_.settings().mapHidden) return;
     if (!map) {
       map = UI.createMap(mapEl);
       line = L.polyline(routeOnMap, { color: '#1565c0', weight: 5 }).addTo(map);
@@ -307,6 +314,8 @@
   });
 
   statusEl.addEventListener('click', watchGps);
+  el('map-hide').addEventListener('click', () => setMapHidden(true));
+  el('map-show').addEventListener('click', () => setMapHidden(false));
   landscape.addEventListener('change', () => requestAnimationFrame(updateMap));
 
   document.addEventListener('visibilitychange', () => {
@@ -321,6 +330,7 @@
 
   root.Measure = {
     init() {
+      document.body.classList.toggle('map-hidden', Boolean(Storage_.settings().mapHidden));
       Database.onChange((list) => {
         sections = list;
         watcher.setSections(list);
@@ -337,6 +347,26 @@
       correction = Route.clampCorrection(value);
       Storage_.saveCorrection(correction);
       render();
+    },
+    // Teksty nanoszone na nagranie wideo
+    overlay() {
+      const now = Date.now();
+      const fresh = now - receivedAt < STALE_MS;
+      const s = tracker.section();
+      const fix = fresh ? tracker.lastFix() : null;
+      let measurement = '';
+      if (s) {
+        const seconds = s.running && startedAt !== null ? (now - startedAt) / 1000 : s.seconds;
+        measurement = (s.running ? 'Pomiar: ' : 'Ostatni pomiar: ') + UI.km(s.distanceM) +
+          ' · ' + UI.duration(seconds) + (trip && trip.sectionName ? ' · ' + trip.sectionName : '');
+      }
+      return {
+        speed: UI.speed(fresh ? Route.corrected(tracker.speedKmh(), correction) : null),
+        average: UI.speed(s ? Route.corrected(s.averageKmh, correction) : null),
+        measurement,
+        date: UI.date(now) + ' ' + UI.clock(now),
+        position: fix ? fix.lat.toFixed(5) + ', ' + fix.lon.toFixed(5) : '',
+      };
     },
     // Aktualne położenie (do dodawania odcinków)
     position() {

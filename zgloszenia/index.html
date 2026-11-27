@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Zgłoszenia odcinków</title>
+  <link rel="icon" href="../icons/icon-192.png">
+  <link rel="stylesheet" href="zgloszenia.css">
+</head>
+<body>
+  <main>
+    <h1>Zgłoszenia odcinków</h1>
+
+    <form id="login">
+      <label for="password">Hasło</label>
+      <input id="password" type="password" autocomplete="current-password" required>
+      <button type="submit">Wejdź</button>
+      <p id="login-message" role="status"></p>
+    </form>
+
+    <section id="panel" hidden>
+      <div class="bar">
+        <select id="state" aria-label="Które zgłoszenia">
+          <option value="open">Nowe (otwarte)</option>
+          <option value="closed">Zamknięte</option>
+        </select>
+        <button id="reload" type="button">Odśwież</button>
+        <button id="logout" type="button">Wyloguj</button>
+      </div>
+      <p id="message" role="status"></p>
+      <ul id="issues"></ul>
+    </section>
+
+    <p><a href="../">‹ Aplikacja</a></p>
+  </main>
+
+  <script src="../sections.js"></script>
+  <script src="zgloszenia.js"></script>
+</body>
+</html>

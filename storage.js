@@ -6,7 +6,10 @@
   const STORE = 'trips';
   const CORRECTION_KEY = 'odcinkowy.correction';
   const SETTINGS_KEY = 'odcinkowy.settings';
-  const DEFAULTS = { auto: false, sound: true, approachM: 800 };
+  const DEFAULTS = {
+    auto: false, sound: true, approachM: 800,
+    recording: false, clipMinutes: 5, loopClips: 2, mapHidden: false,
+  };
 
   let dbPromise = null;
 

@@ -1,5 +1,5 @@
 // Działanie offline. Najpierw sieć (świeże pliki), a bez zasięgu — pamięć podręczna.
-const CACHE = 'odcinkowy-v3';
+const CACHE = 'odcinkowy-v4';
 const FILES = [
   './',
   'index.html',
@@ -16,6 +16,9 @@ const FILES = [
   'measure.js',
   'history.js',
   'app.js',
+  'videostore.js',
+  'recorder.js',
+  'recordings.js',
   'vendor/leaflet/leaflet.js',
   'vendor/leaflet/leaflet.css',
   'manifest.webmanifest',
