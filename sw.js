@@ -1,11 +1,16 @@
 // Działanie offline. Najpierw sieć (świeże pliki), a bez zasięgu — pamięć podręczna.
-const CACHE = 'odcinkowy-v2';
+const CACHE = 'odcinkowy-v3';
 const FILES = [
   './',
   'index.html',
   'style.css',
   'tracker.js',
   'route.js',
+  'sections.js',
+  'alerts.js',
+  'database.js',
+  'data/odcinki-osm.json',
+  'data/odcinki-wlasne.json',
   'storage.js',
   'ui.js',
   'measure.js',

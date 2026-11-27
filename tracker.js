@@ -119,7 +119,7 @@
     };
   }
 
-  const api = { createTracker, distanceM };
+  const api = { createTracker, distanceM, MAX_ACCURACY_M };
   if (typeof module !== 'undefined') module.exports = api;
   else root.Tracker = api;
 })(this);

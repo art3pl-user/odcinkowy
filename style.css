@@ -177,7 +177,7 @@ h1, h2 {
 
 /* ---------- Historia ---------- */
 
-#view-history, #view-settings { overflow-y: auto; }
+#view-history, #view-settings, #view-database { overflow-y: auto; }
 #trip-list { list-style: none; max-width: 640px; margin: 0 auto; }
 
 .trip {
@@ -243,11 +243,89 @@ h1, h2 {
 .preview { color: #4fc3f7; }
 #correction-reset { min-height: 48px; }
 
+/* ---------- Baza odcinków i ustawienia ---------- */
+
+.column { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 480px; margin: 0 auto; }
+.column > * { flex: none; }
+.column h2 { margin-top: 12px; text-align: center; }
+.note a { color: #4fc3f7; }
+
+.action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: #2a2a2a;
+  color: #fff;
+  text-align: center;
+  text-decoration: none;
+}
+.action.primary { background: #1565c0; font-weight: 700; }
+.danger { background: #4a1f1f; }
+
+input[type="text"], input[type="number"] {
+  min-height: 48px;
+  padding: 0 12px;
+  border: 1px solid #444;
+  border-radius: 12px;
+  background: #111;
+  color: #fff;
+  font: inherit;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+#local-list { list-style: none; }
+.card { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; padding: 12px; border-radius: 14px; background: #1a1a1a; }
+
+.check { display: flex; align-items: center; gap: 12px; min-height: 48px; text-align: left; }
+.check input { flex: none; width: 28px; height: 28px; accent-color: #1565c0; }
+.check span { flex: 1; }
+.check select { min-height: 48px; padding: 0 12px; }
+
+/* ---------- Ostrzeżenia ---------- */
+
+#alert {
+  position: fixed;
+  z-index: 1400;
+  top: calc(4px + var(--top));
+  left: calc(64px + var(--left));
+  right: calc(8px + var(--right));
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 48px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  text-align: center;
+  pointer-events: none;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.5);
+}
+#alert strong { font-size: 1.15rem; }
+#alert span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 0.9rem; }
+#alert.approach { background: #ffb300; color: #000; }
+#alert.start, #alert.inside { background: #c62828; }
+#alert.end { background: #2e7d32; }
+#alert.abandon { background: #555; }
+
+body.flash::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  border: 10px solid #ffb300;
+  pointer-events: none;
+  animation: flash 0.5s steps(2, start) infinite;
+}
+@keyframes flash { to { visibility: hidden; } }
+
 #toast {
   position: fixed;
   z-index: 1500;
   left: 50%;
-  top: calc(8px + var(--top));
+  bottom: calc(16px + var(--bottom));
   transform: translateX(-50%);
   width: max-content;
   max-width: 90vw;
@@ -290,6 +368,9 @@ h1, h2 {
   .unit { font-size: 0.9rem; }
   .status, .details { margin-top: 2px; font-size: 0.8rem; }
   #toggle { height: max(52px, 14vh); font-size: 1.5rem; }
+
+  /* Poziomo ostrzeżenie leży nad mapą i nie zasłania prędkości */
+  #alert { left: calc(40% + 64px); right: calc(120px + var(--right)); top: calc(14px + var(--top)); }
 
   #view-replay { flex-direction: row; padding-bottom: calc(8px + var(--bottom)); }
   #view-replay .map-box { order: 0; }

@@ -5,6 +5,8 @@
   const DB_NAME = 'odcinkowy';
   const STORE = 'trips';
   const CORRECTION_KEY = 'odcinkowy.correction';
+  const SETTINGS_KEY = 'odcinkowy.settings';
+  const DEFAULTS = { auto: false, sound: true, approachM: 800 };
 
   let dbPromise = null;
 
@@ -63,6 +65,34 @@
         // brak dostępu do pamięci — ustawienie działa do zamknięcia aplikacji
       }
     },
+  };
+
+  // Dane w formacie JSON; gdy pamięć jest niedostępna, zwracamy wartość domyślną
+  api.read = (key, fallback) => {
+    try {
+      const value = JSON.parse(localStorage.getItem(key));
+      return value !== null && typeof value === 'object' ? value : fallback;
+    } catch (e) {
+      return fallback;
+    }
+  };
+
+  api.write = (key, value) => {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (e) {
+      console.warn(e);
+    }
+  };
+
+  let settings = null;
+  api.settings = () => {
+    if (!settings) settings = { ...DEFAULTS, ...api.read(SETTINGS_KEY, {}) };
+    return settings;
+  };
+  api.setSetting = (name, value) => {
+    api.settings()[name] = value;
+    api.write(SETTINGS_KEY, settings);
   };
 
   root.Storage_ = api;

@@ -10,6 +10,7 @@
     measure: 'Odcinkowy pomiar',
     history: 'Historia',
     replay: 'Trasa',
+    database: 'Baza odcinków',
     settings: 'Konfiguracja',
   };
 
@@ -33,6 +34,7 @@
     const [tab, id] = location.hash.slice(1).split('/');
     let view = 'measure';
     if (tab === 'historia') view = id ? 'replay' : 'history';
+    else if (tab === 'odcinki') view = 'database';
     else if (tab === 'konfiguracja') view = 'settings';
 
     History_.leave();
@@ -49,6 +51,7 @@
     if (view === 'measure') Measure.show();
     if (view === 'history') History_.showList();
     if (view === 'replay') History_.showTrip(id);
+    if (view === 'database') Database.render();
     if (view === 'settings') renderSettings();
   }
 
@@ -74,6 +77,16 @@
   el('correction-minus').addEventListener('click', () => changeCorrection(Measure.correction() - 1));
   el('correction-plus').addEventListener('click', () => changeCorrection(Measure.correction() + 1));
   el('correction-reset').addEventListener('click', () => changeCorrection(0));
+  for (const name of ['auto', 'sound']) {
+    const box = el('setting-' + name);
+    box.checked = Boolean(Storage_.settings()[name]);
+    box.addEventListener('change', () => Storage_.setSetting(name, box.checked));
+  }
+  const approach = el('setting-approach');
+  approach.value = String(Storage_.settings().approachM);
+  approach.addEventListener('change', () => Storage_.setSetting('approachM', Number(approach.value)));
+  el('alert-test').addEventListener('click', Alerts.test);
+
   setInterval(() => {
     if (!el('view-settings').hidden) renderSettings();
   }, 1000);
@@ -87,6 +100,7 @@
   Storage_.recoverTrips()
     .catch(console.error)
     .then(() => {
+      Database.load().catch(console.error);
       Measure.init();
       route();
       el('toggle').disabled = false;

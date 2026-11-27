@@ -59,7 +59,8 @@
         node('strong', '', UI.date(t.startedAt) + ', ' + UI.clock(t.startedAt)),
         node('span', 'trip-average', UI.speed(average) + ' km/h'),
         node('span', 'trip-details', UI.km(t.distanceM) + ' · ' + UI.duration(t.seconds) +
-          (t.interrupted ? ' · przerwany' : '')),
+          (t.interrupted ? ' · przerwany' : '') + (t.incomplete ? ' · bez końca odcinka' : '') +
+          (t.sectionName ? ' · ' + t.sectionName : '')),
       );
       const item = node('li');
       item.append(link);

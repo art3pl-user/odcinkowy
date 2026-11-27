@@ -17,6 +17,11 @@
   const landscape = window.matchMedia('(orientation: landscape)');
 
   const tracker = Tracker.createTracker();
+  const watcher = Sections.createWatcher();
+  let course = null;       // kierunek jazdy w stopniach
+  let courseFrom = null;
+  let sections = [];
+  let sectionLayer = null;
   let watchId = null;
   let receivedAt = 0;      // kiedy przyszedł ostatni dobry odczyt (zegar telefonu)
   let startedAt = null;    // do płynnego licznika czasu
@@ -37,6 +42,7 @@
   }
 
   function render() {
+    Alerts.tick();
     const fresh = Date.now() - receivedAt < STALE_MS;
     const speed = fresh ? Route.corrected(tracker.speedKmh(), correction) : null;
     speedEl.textContent = UI.speed(speed);
@@ -52,7 +58,10 @@
     }
     timeEl.textContent = UI.duration(seconds);
 
-    if (receivedAt && !fresh) setStatus('Brak sygnału GPS', true);
+    if (receivedAt && !fresh) {
+      setStatus('Brak sygnału GPS', true);
+      Alerts.hide();
+    }
   }
 
   // ---------- Mapa ----------
@@ -63,6 +72,8 @@
     if (!map) {
       map = UI.createMap(mapEl);
       line = L.polyline(routeOnMap, { color: '#1565c0', weight: 5 }).addTo(map);
+      sectionLayer = L.layerGroup().addTo(map);
+      drawSections();
       marker = UI.dot('#1565c0');
       map.on('dragstart', () => {
         follow = false;
@@ -77,6 +88,21 @@
     const first = !map.hasLayer(marker);
     marker.setLatLng(position).addTo(map);
     if (follow) map.setView(position, first ? 16 : map.getZoom(), { animate: false });
+  }
+
+  // Punkty odcinków: pomarańczowy — początek, fioletowy — koniec
+  function drawSections() {
+    if (!sectionLayer) return;
+    sectionLayer.clearLayers();
+    for (const s of sections) {
+      for (const [point, color, label] of [[s.start, '#ef6c00', 'Początek'], [s.end, '#6a1b9a', 'Koniec']]) {
+        const text = document.createElement('span');
+        text.textContent = label + ': ' + s.name + (s.limit ? ' (' + s.limit + ' km/h)' : '');
+        L.circleMarker([point.lat, point.lon], {
+          radius: 6, color: '#fff', weight: 2, fillColor: color, fillOpacity: 1,
+        }).bindPopup(text).addTo(sectionLayer);
+      }
+    }
   }
 
   // ---------- Zapis trasy ----------
@@ -116,8 +142,8 @@
     });
   }
 
-  function start() {
-    const now = Date.now();
+  // now: chwila startu; section: odcinek przy starcie automatycznym
+  function start(now = Date.now(), section = null) {
     startedAt = null;
     savedAt = 0;
     routeOnMap = [];
@@ -125,6 +151,11 @@
     centerButton.hidden = true;
     tracker.start(now);
     trip = { id: String(now), startedAt: now, points: [] };
+    if (section) {
+      trip.auto = true;
+      trip.sectionId = section.id;
+      trip.sectionName = section.name;
+    }
     // Świeży odczyt sprzed naciśnięcia START to pierwszy punkt trasy
     if (!tracker.section().waiting) recordPoint();
     button.textContent = 'STOP';
@@ -132,9 +163,9 @@
     if (watchId === null) watchGps();
   }
 
-  async function stop() {
+  async function stop(extra) {
     tracker.stop();
-    const done = snapshot(true);
+    const done = { ...snapshot(true), ...extra };
     trip = null;
     button.textContent = 'START';
     button.classList.remove('running');
@@ -152,17 +183,58 @@
     }
   }
 
+  // ---------- Odcinki ----------
+
+  // Sygnały i automatyczny start/stop. Punkt minięcia leży między odczytami,
+  // więc dopisujemy go do pomiaru przed bieżącym odczytem.
+  function watchSections(fix) {
+    const result = watcher.update(fix, Storage_.settings().approachM);
+    for (const event of result.events) {
+      if (event.type === 'start' && Storage_.settings().auto) {
+        if (trip) {
+          UI.toast('Pomiar już trwa — nie uruchamiam nowego');
+        } else {
+          tracker.update(event.at);
+          start(event.at.t, event.section);
+          render();
+        }
+      }
+      const ours = trip && trip.auto && trip.sectionId === event.section.id;
+      if (ours && event.type === 'end') {
+        tracker.update(event.at);
+        recordPoint();
+        stop();
+      } else if (ours && event.type === 'abandon') {
+        stop({ incomplete: true });
+      }
+    }
+    Alerts.handle(result);
+  }
+
+  function updateCourse(fix) {
+    if (courseFrom && Sections.distance(courseFrom, fix) < 10) return;
+    if (courseFrom) course = Sections.bearing(courseFrom, fix);
+    courseFrom = fix;
+  }
+
   // ---------- GPS ----------
 
   function onPosition(pos) {
     const c = pos.coords;
-    const accepted = tracker.update({
+    const fix = {
       lat: c.latitude,
       lon: c.longitude,
       accuracy: c.accuracy,
       speed: Number.isFinite(c.speed) ? c.speed : null,
       t: pos.timestamp,
-    });
+    };
+    // Najpierw odcinki: pomiar może zacząć się lub skończyć tuż przed tym odczytem
+    const usable = fix.accuracy <= Tracker.MAX_ACCURACY_M;
+    if (usable) {
+      updateCourse(fix);
+      watchSections(fix);
+    }
+    const accepted = tracker.update(fix);
     if (accepted) {
       receivedAt = Date.now();
       setStatus('GPS: dokładność ±' + Math.round(c.accuracy) + ' m');
@@ -218,8 +290,11 @@
   // ---------- Zdarzenia ----------
 
   button.addEventListener('click', () => {
-    if (trip) stop();
-    else start();
+    if (trip) {
+      stop();
+    } else {
+      start();
+    }
     keepScreenOn();
     render();
     updateMap();
@@ -246,6 +321,11 @@
 
   root.Measure = {
     init() {
+      Database.onChange((list) => {
+        sections = list;
+        watcher.setSections(list);
+        drawSections();
+      });
       watchGps();
       keepScreenOn();
       render();
@@ -257,6 +337,12 @@
       correction = Route.clampCorrection(value);
       Storage_.saveCorrection(correction);
       render();
+    },
+    // Aktualne położenie (do dodawania odcinków)
+    position() {
+      const fix = tracker.lastFix();
+      if (!fix || Date.now() - receivedAt >= STALE_MS) return null;
+      return { ...fix, course, speedKmh: tracker.speedKmh() || 0 };
     },
     // Surowa prędkość z GPS (do podglądu w Konfiguracji)
     gpsSpeed: () => (Date.now() - receivedAt < STALE_MS ? tracker.speedKmh() : null),
