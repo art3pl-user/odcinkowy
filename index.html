@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <title>Pomiar odcinkowy</title>
+  <meta name="theme-color" content="#000000">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Odcinkowy">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <section class="panel current">
+      <h1>Prędkość</h1>
+      <div class="value" id="speed">--</div>
+      <div class="unit">km/h</div>
+      <p class="status" id="status" role="status">Szukam sygnału GPS…</p>
+    </section>
+
+    <section class="panel average">
+      <h2>Średnia z odcinka</h2>
+      <div class="value" id="average">--</div>
+      <div class="unit">km/h</div>
+      <p class="details"><span id="distance">0,00 km</span> · <span id="time">00:00</span></p>
+    </section>
+
+    <button id="toggle" type="button">START</button>
+  </main>
+
+  <script src="tracker.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

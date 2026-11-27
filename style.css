@@ -1,0 +1,90 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: #000;
+  color: #fff;
+  font-family: system-ui, -apple-system, Roboto, sans-serif;
+  overscroll-behavior: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+main {
+  height: 100vh;
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: 1.4fr 1fr auto;
+  gap: 12px;
+  padding:
+    max(12px, env(safe-area-inset-top))
+    max(16px, env(safe-area-inset-right))
+    max(16px, env(safe-area-inset-bottom))
+    max(16px, env(safe-area-inset-left));
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  text-align: center;
+}
+
+h1, h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #9a9a9a;
+}
+
+.value {
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.current .value { font-size: min(46vw, 24vh); }
+.average .value { font-size: min(30vw, 15vh); color: #4fc3f7; }
+
+.unit { font-size: 1.2rem; color: #9a9a9a; }
+
+.status, .details {
+  margin-top: 8px;
+  font-size: 0.95rem;
+  color: #9a9a9a;
+  font-variant-numeric: tabular-nums;
+}
+
+.status.error { color: #ff8a80; }
+
+button {
+  width: 100%;
+  height: max(72px, 13vh);
+  border: 0;
+  border-radius: 20px;
+  font: inherit;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #fff;
+  background: #2e7d32;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+button.running { background: #c62828; }
+button:active { filter: brightness(1.2); }
+
+/* Telefon poziomo: prędkości obok siebie, przycisk pod spodem */
+@media (orientation: landscape) and (max-height: 600px) {
+  main {
+    grid-template-columns: 1.3fr 1fr;
+    grid-template-rows: 1fr auto;
+  }
+  button { grid-column: 1 / -1; height: 64px; }
+  .current .value { font-size: min(24vw, 40vh); }
+  .average .value { font-size: min(16vw, 28vh); }
+}
