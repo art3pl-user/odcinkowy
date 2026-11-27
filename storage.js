@@ -8,7 +8,7 @@
   const SETTINGS_KEY = 'odcinkowy.settings';
   const DEFAULTS = {
     auto: false, sound: true, approachM: 800,
-    recording: false, clipMinutes: 5, loopClips: 2, impactG: 2.5, mapHidden: false, theme: 'auto',
+    recording: false, clipMinutes: 5, loopClips: 5, impactG: 2.5, mapHidden: false, theme: 'auto',
   };
 
   let dbPromise = null;
@@ -88,9 +88,17 @@
     }
   };
 
+  const LOOP_OPTIONS = [1, 5, 10, 15, 25];
+
   let settings = null;
   api.settings = () => {
-    if (!settings) settings = { ...DEFAULTS, ...api.read(SETTINGS_KEY, {}) };
+    if (!settings) {
+      settings = { ...DEFAULTS, ...api.read(SETTINGS_KEY, {}) };
+      // Wartość z poprzedniej wersji zaokrąglamy w górę, żeby nie skasować nagrań
+      if (!LOOP_OPTIONS.includes(settings.loopClips)) {
+        settings.loopClips = LOOP_OPTIONS.find((n) => n >= settings.loopClips) || DEFAULTS.loopClips;
+      }
+    }
     return settings;
   };
   api.setSetting = (name, value) => {

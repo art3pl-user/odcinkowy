@@ -1,6 +1,6 @@
 // Działanie offline i aktualizacje. Każda wersja ma własny komplet plików,
 // więc aplikacja nigdy nie miesza starych i nowych.
-const VERSION = '2.0.0';
+const VERSION = '2.1.0';
 const CACHE = 'odcinkowy-' + VERSION;
 const FILES = [
   './',
@@ -24,6 +24,7 @@ const FILES = [
   'impact.js',
   'motion.js',
   'history.js',
+  'sheet.js',
   'app.js',
   'vendor/leaflet/leaflet.js',
   'vendor/leaflet/leaflet.css',

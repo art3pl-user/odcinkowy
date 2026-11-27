@@ -63,6 +63,11 @@
   // ---------- Konfiguracja ----------
 
   function renderSettings() {
+    // Minuta nagrania to najwyżej ok. 19 MB; do pętli dochodzi trwający klip
+    const { clipMinutes, loopClips } = Storage_.settings();
+    const gigabytes = (loopClips + 1) * clipMinutes * 19 / 1000;
+    el('loop-size').textContent = 'Pętla zajmie maksymalnie około ' +
+      gigabytes.toFixed(1).replace('.', ',') + ' GB pamięci telefonu.';
     el('impact-state').textContent = Motion.describe();
     const correction = Measure.correction();
     el('correction').textContent = (correction > 0 ? '+' : '') + correction;
@@ -103,7 +108,10 @@
   for (const [id, name] of [['setting-clip', 'clipMinutes'], ['setting-loop', 'loopClips']]) {
     const select = el(id);
     select.value = String(Storage_.settings()[name]);
-    select.addEventListener('change', () => Storage_.setSetting(name, Number(select.value)));
+    select.addEventListener('change', () => {
+      Storage_.setSetting(name, Number(select.value));
+      renderSettings();
+    });
   }
 
   const impact = el('setting-impact');
@@ -114,6 +122,10 @@
     Motion.update(true);
     renderSettings();
   });
+  el('impact-info').addEventListener('click', () => Sheet.info('Wykrywanie uderzenia',
+    'Po wykryciu uderzenia trwające nagranie jest automatycznie zachowywane. ' +
+    'Im wyższa czułość, tym słabszy wstrząs wystarczy. ' +
+    'Jeśli zapisują się nagrania po dziurach i progach, zmniejsz czułość.'));
   el('impact-reset').addEventListener('click', () => {
     Motion.resetPeak();
     renderSettings();
@@ -130,6 +142,9 @@
     if (Measure.measuring()) UI.toast('Najpierw zatrzymaj pomiar');
     else location.reload();
   });
+
+  // Listy w stylu aplikacji — po ustawieniu wartości początkowych
+  for (const select of document.querySelectorAll('select')) Sheet.enhance(select);
 
   window.addEventListener('hashchange', route);
   // Najpierw ekran startowy (aktualizacje) i porządek w przerwanych pomiarach,

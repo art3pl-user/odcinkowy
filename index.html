@@ -220,64 +220,76 @@
         <button type="button" data-theme-choice="night">Noc</button>
         <button type="button" data-theme-choice="auto">Auto</button>
       </div>
-      <p class="note">Auto przełącza motyw o wschodzie i zachodzie słońca w Twojej okolicy.</p>
+      <p class="hint">Auto przełącza motyw o wschodzie i zachodzie słońca w Twojej okolicy.</p>
     </section>
 
     <section class="group">
       <h2>Odcinki i sygnały</h2>
-      <label class="check"><input id="setting-auto" type="checkbox">
-        <span>Uruchamiaj pomiar automatycznie, gdy mijam początek odcinka, i kończ po minięciu końca</span></label>
-      <label class="check"><input id="setting-sound" type="checkbox">
-        <span>Sygnał dźwiękowy</span></label>
-      <label class="check">
-        <span>Ostrzegaj przed punktem z odległości</span>
-        <select id="setting-approach">
+      <label class="item">
+        <span>Automatyczny pomiar<small>Start po minięciu początku odcinka, stop po minięciu końca</small></span>
+        <input id="setting-auto" class="switch" type="checkbox" role="switch">
+      </label>
+      <label class="item">
+        <span>Sygnał dźwiękowy</span>
+        <input id="setting-sound" class="switch" type="checkbox" role="switch">
+      </label>
+      <div class="item">
+        <span>Ostrzegaj z odległości</span>
+        <select id="setting-approach" aria-label="Ostrzegaj z odległości">
           <option value="300">300 m</option>
           <option value="500">500 m</option>
           <option value="800">800 m</option>
           <option value="1000">1 km</option>
           <option value="2000">2 km</option>
-        </select></label>
+        </select>
+      </div>
       <button id="alert-test" class="action" type="button">Sprawdź sygnał</button>
-
     </section>
 
     <section class="group">
       <h2>Wideorejestrator</h2>
-      <label class="check"><input id="setting-recording" type="checkbox">
-        <span>Nagrywaj wideo w pętli, gdy aplikacja jest otwarta (bez dźwięku)</span></label>
-      <label class="check">
-        <span>Długość jednego nagrania</span>
-        <select id="setting-clip">
+      <label class="item">
+        <span>Nagrywanie w pętli<small>Gdy aplikacja jest otwarta, bez dźwięku</small></span>
+        <input id="setting-recording" class="switch" type="checkbox" role="switch">
+      </label>
+      <div class="item">
+        <span>Długość nagrania</span>
+        <select id="setting-clip" aria-label="Długość nagrania">
           <option value="1">1 min</option>
           <option value="3">3 min</option>
           <option value="5">5 min</option>
           <option value="10">10 min</option>
-        </select></label>
-      <label class="check">
-        <span>Pętla: ile poprzednich nagrań trzymać</span>
-        <select id="setting-loop">
+        </select>
+      </div>
+      <div class="item">
+        <span>Poprzednie nagrania w pętli</span>
+        <select id="setting-loop" aria-label="Poprzednie nagrania w pętli">
           <option value="1">1</option>
-          <option value="2">2</option>
           <option value="5">5</option>
-          <option value="11">11</option>
-        </select></label>
-      <label class="check">
-        <span>Czułość wykrywania uderzenia</span>
-        <select id="setting-impact">
+          <option value="10">10</option>
+          <option value="15">15</option>
+          <option value="25">25</option>
+        </select>
+      </div>
+      <p id="loop-size" class="hint"></p>
+      <div class="item">
+        <span>Czułość uderzenia</span>
+        <select id="setting-impact" aria-label="Czułość uderzenia">
           <option value="0">Wyłączone</option>
           <option value="1.5">Bardzo wysoka (1,5 g)</option>
           <option value="2">Wysoka (2 g)</option>
           <option value="2.5">Średnia (2,5 g)</option>
           <option value="3.5">Niska (3,5 g)</option>
           <option value="5">Bardzo niska (5 g)</option>
-        </select></label>
+        </select>
+      </div>
       <p id="impact-state" class="preview"></p>
-      <button id="impact-reset" class="action" type="button">Wyzeruj odczyt wstrząsu</button>
-      <p class="note">Po wykryciu uderzenia trwające nagranie jest automatycznie zachowywane. Im wyższa czułość, tym słabszy wstrząs wystarczy. Jeśli zapisują się nagrania po dziurach i progach, zmniejsz czułość.</p>
+      <div class="with-info">
+        <button id="impact-reset" class="action" type="button">Wyzeruj odczyt wstrząsu</button>
+        <button id="impact-info" class="info" type="button" aria-label="Jak działa wykrywanie uderzenia">i</button>
+      </div>
       <p id="recording-state" class="preview" role="status"></p>
-      <p class="note">Minuta nagrania zajmuje około 19 MB. Starsze nagrania są usuwane, chyba że naciśniesz „Zapisz” przy podglądzie lub „Zachowaj” w zakładce Nagrania. Nagrywanie zatrzymuje się po zminimalizowaniu aplikacji.</p>
-
+      <p class="hint">Starsze nagrania są usuwane, chyba że naciśniesz „Zapisz” przy podglądzie lub „Zachowaj” w zakładce Nagrania. Nagrywanie zatrzymuje się po zminimalizowaniu aplikacji.</p>
     </section>
 
     <section class="group">
@@ -288,18 +300,28 @@
         <button id="correction-plus" type="button" aria-label="Zwiększ o 1 km/h">+</button>
       </div>
       <p id="correction-preview" class="preview"></p>
-      <button id="correction-reset" type="button">Wyzeruj</button>
-      <p class="note">Wartość jest dodawana do aktualnej i średniej prędkości. Na postoju zawsze widać 0. Dystans i czas się nie zmieniają. Każdy pomiar w Historii zachowuje korektę z chwili zapisu.</p>
+      <button id="correction-reset" class="action" type="button">Wyzeruj</button>
+      <p class="hint">Dodawana do aktualnej i średniej prędkości. Na postoju zawsze widać 0. Dystans i czas się nie zmieniają. Pomiar w Historii zachowuje korektę z chwili zapisu.</p>
     </section>
 
     <section class="group">
       <h2>O aplikacji</h2>
-      <p id="about-version" class="note"></p>
-      <button id="about-update" class="action" type="button">Sprawdź aktualizacje</button>
-      <button id="about-news" class="action" type="button">Co nowego</button>
+      <p id="about-version" class="hint"></p>
+      <div class="row">
+        <button id="about-update" class="action" type="button">Sprawdź aktualizacje</button>
+        <button id="about-news" class="action" type="button">Co nowego</button>
+      </div>
     </section>
     </div>
   </main>
+
+  <div id="sheet" hidden>
+    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+      <p id="sheet-title"></p>
+      <div id="sheet-body"></div>
+      <button id="sheet-close" class="action" type="button">Zamknij</button>
+    </div>
+  </div>
 
   <div id="toast" role="status" hidden></div>
 
@@ -322,6 +344,7 @@
   <script src="impact.js"></script>
   <script src="motion.js"></script>
   <script src="history.js"></script>
+  <script src="sheet.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

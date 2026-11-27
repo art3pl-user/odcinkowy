@@ -3,13 +3,14 @@
   'use strict';
 
   const release = {
-    version: '2.0.0',
+    version: '2.1.0',
     date: '2026-11-27',
     notes: [
-      'Nowy, elegancki wygląd z zegarem prędkości',
-      'Motyw dzienny i nocny, przełączany ręcznie lub według pory dnia',
-      'Ekran startowy z aktualizacją aplikacji i listą nowości',
-      'Wykrywanie uderzenia z automatycznym zachowaniem nagrania',
+      'Nagranie z kamery jest zawsze poziome',
+      'Czytelniejsza, bardziej zwarta Konfiguracja z nowymi listami wyboru',
+      'Pętla nagrań: 1, 5, 10, 15 lub 25 poprzednich nagrań',
+      'Opis wykrywania uderzenia pod przyciskiem „i”',
+      'Przyciski na dole ekranu nie chowają się już za belką telefonu',
     ],
   };
 

@@ -5,6 +5,8 @@
   const FPS = 24;
   const BITRATE = 2500000;       // ok. 19 MB na minutę
   const CHUNK_MS = 1000;         // co tyle obraz trafia do pamięci telefonu
+  const WIDTH = 1280;            // nagranie jest zawsze poziome, 16:9
+  const HEIGHT = 720;
   const NEAR_START_S = 30;       // "Zapisz" tuż po zmianie klipu zachowuje też poprzedni
   const AFTER_IMPACT_S = 30;     // tyle nagrania po uderzeniu zachowujemy co najmniej
   const IMPACT_LABEL_MS = 5000;  // napis o uderzeniu na obrazie
@@ -40,7 +42,13 @@
 
   function draw() {
     const { width, height } = canvas;
-    context.drawImage(video, 0, 0, width, height);
+    // Wypełniamy cały poziomy kadr; z obrazu pionowego bierzemy środkowy pas
+    const scale = Math.max(width / video.videoWidth, height / video.videoHeight);
+    const cropWidth = width / scale;
+    const cropHeight = height / scale;
+    context.drawImage(video,
+      (video.videoWidth - cropWidth) / 2, (video.videoHeight - cropHeight) / 2, cropWidth, cropHeight,
+      0, 0, width, height);
 
     const unit = Math.min(width, height) / 18;
     const data = Measure.overlay();
@@ -133,16 +141,10 @@
 
   function tick() {
     if (!current || !video.videoWidth) return;
-    const rotated = video.videoWidth !== canvas.width || video.videoHeight !== canvas.height;
-    if (rotated) {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-    }
     draw();
     const seconds = (Date.now() - current.clip.startedAt) / 1000;
     try {
-      // Po obrocie telefonu zaczynamy nowy klip w nowych wymiarach
-      if (rotated || seconds >= settings().clipMinutes * 60) nextClip();
+      if (seconds >= settings().clipMinutes * 60) nextClip();
     } catch (err) {
       console.error(err);
       fail('Błąd nagrywania');
@@ -200,9 +202,9 @@
       video.srcObject = stream;
       await video.play();
       if (mine !== generation) return;
-      canvas.width = video.videoWidth || 1280;
-      canvas.height = video.videoHeight || 720;
-      draw();
+      canvas.width = WIDTH;
+      canvas.height = HEIGHT;
+      if (video.videoWidth) draw();
       output = canvas.captureStream(FPS);
       current = beginClip();
       timer = setInterval(tick, 1000 / FPS);
