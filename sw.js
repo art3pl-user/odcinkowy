@@ -1,11 +1,18 @@
 // Działanie offline. Najpierw sieć (świeże pliki), a bez zasięgu — pamięć podręczna.
-const CACHE = 'odcinkowy-v1';
+const CACHE = 'odcinkowy-v2';
 const FILES = [
   './',
   'index.html',
   'style.css',
   'tracker.js',
+  'route.js',
+  'storage.js',
+  'ui.js',
+  'measure.js',
+  'history.js',
   'app.js',
+  'vendor/leaflet/leaflet.js',
+  'vendor/leaflet/leaflet.css',
   'manifest.webmanifest',
   'icons/icon-192.png',
   'icons/icon-512.png',
@@ -14,7 +21,7 @@ const FILES = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(FILES)).then(() => self.skipWaiting())
+    caches.open(CACHE).then((cache) => cache.addAll(FILES.map((f) => new Request(f, { cache: 'reload' })))).then(() => self.skipWaiting())
   );
 });
 
@@ -32,7 +39,8 @@ self.addEventListener('fetch', (event) => {
   const request = event.request;
   if (request.method !== 'GET' || !request.url.startsWith(self.location.origin)) return;
   event.respondWith(
-    fetch(request)
+    // no-cache: zawsze sprawdzamy u serwera, żeby nie mieszać starych i nowych plików
+    fetch(request, { cache: 'no-cache' })
       .then((response) => {
         if (response.ok) {
           const copy = response.clone();

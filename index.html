@@ -12,28 +12,105 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <main>
-    <section class="panel current">
-      <h1>Prędkość</h1>
-      <div class="value" id="speed">--</div>
-      <div class="unit">km/h</div>
-      <p class="status" id="status" role="status">Szukam sygnału GPS…</p>
-    </section>
+<body data-view="measure">
+  <header>
+    <button id="menu-button" type="button" aria-label="Menu" aria-controls="menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <p id="title">Odcinkowy pomiar</p>
+  </header>
 
-    <section class="panel average">
-      <h2>Średnia z odcinka</h2>
-      <div class="value" id="average">--</div>
-      <div class="unit">km/h</div>
-      <p class="details"><span id="distance">0,00 km</span> · <span id="time">00:00</span></p>
-    </section>
+  <div id="backdrop" hidden></div>
+  <nav id="menu">
+    <a href="#pomiar" data-tab="measure">Odcinkowy pomiar</a>
+    <a href="#historia" data-tab="history">Historia</a>
+    <a href="#konfiguracja" data-tab="settings">Konfiguracja</a>
+  </nav>
 
-    <button id="toggle" type="button">START</button>
+  <main id="view-measure">
+    <div class="readings">
+      <section class="panel current">
+        <h1>Prędkość</h1>
+        <div class="value" id="speed">--</div>
+        <div class="unit">km/h</div>
+        <p class="status" id="status" role="status">Szukam sygnału GPS…</p>
+      </section>
+
+      <section class="panel average">
+        <h2>Średnia z odcinka</h2>
+        <div class="value" id="average">--</div>
+        <div class="unit">km/h</div>
+        <p class="details"><span id="distance">0,00 km</span> · <span id="time">00:00</span></p>
+      </section>
+
+      <button id="toggle" type="button" disabled>START</button>
+    </div>
+
+    <div class="map-box">
+      <div id="live-map" class="map"></div>
+      <button id="center" type="button" hidden>Wyśrodkuj</button>
+    </div>
   </main>
 
+  <main id="view-history" hidden>
+    <p id="history-empty" class="note" hidden>Brak zapisanych pomiarów. Naciśnij START, a po STOP trasa pojawi się tutaj.</p>
+    <ul id="trip-list"></ul>
+  </main>
+
+  <main id="view-replay" hidden>
+    <div class="replay-panel">
+      <p id="replay-summary" class="note"></p>
+      <div id="replay-speed">--</div>
+      <p id="replay-clock"></p>
+      <p id="replay-position" class="note"></p>
+      <input id="replay-slider" type="range" min="0" max="0" step="100" value="0" aria-label="Pozycja na trasie">
+      <p id="replay-elapsed" class="note"></p>
+      <div class="row">
+        <button id="replay-play" type="button">▶ Odtwórz</button>
+        <select id="replay-rate" aria-label="Tempo odtwarzania">
+          <option value="1">1×</option>
+          <option value="5">5×</option>
+          <option value="10" selected>10×</option>
+          <option value="30">30×</option>
+          <option value="100">100×</option>
+        </select>
+      </div>
+      <div class="row">
+        <a class="back" href="#historia">‹ Lista</a>
+        <button id="replay-delete" type="button">Usuń</button>
+      </div>
+    </div>
+    <div class="map-box">
+      <div id="replay-map" class="map"></div>
+    </div>
+  </main>
+
+  <main id="view-settings" hidden>
+    <section>
+      <h2>Korekta prędkości</h2>
+      <div class="stepper">
+        <button id="correction-minus" type="button" aria-label="Zmniejsz o 1 km/h">−</button>
+        <div><span id="correction">0</span> km/h</div>
+        <button id="correction-plus" type="button" aria-label="Zwiększ o 1 km/h">+</button>
+      </div>
+      <p id="correction-preview" class="preview"></p>
+      <button id="correction-reset" type="button">Wyzeruj</button>
+      <p class="note">Wartość jest dodawana do aktualnej i średniej prędkości. Na postoju zawsze widać 0. Dystans i czas się nie zmieniają. Każdy pomiar w Historii zachowuje korektę z chwili zapisu.</p>
+    </section>
+  </main>
+
+  <div id="toast" role="status" hidden></div>
+
+  <script src="vendor/leaflet/leaflet.js"></script>
   <script src="tracker.js"></script>
+  <script src="route.js"></script>
+  <script src="storage.js"></script>
+  <script src="ui.js"></script>
+  <script src="measure.js"></script>
+  <script src="history.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
