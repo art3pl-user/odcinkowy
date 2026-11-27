@@ -6,6 +6,8 @@
   const BITRATE = 2500000;       // ok. 19 MB na minutę
   const CHUNK_MS = 1000;         // co tyle obraz trafia do pamięci telefonu
   const NEAR_START_S = 30;       // "Zapisz" tuż po zmianie klipu zachowuje też poprzedni
+  const AFTER_IMPACT_S = 30;     // tyle nagrania po uderzeniu zachowujemy co najmniej
+  const IMPACT_LABEL_MS = 5000;  // napis o uderzeniu na obrazie
   const TYPES = ['video/mp4;codecs=avc1.42E01E', 'video/mp4', 'video/webm;codecs=vp8', 'video/webm'];
 
   const { el } = UI;
@@ -23,6 +25,8 @@
   let generation = 0;            // unieważnia spóźnione uruchomienia kamery
   let starting = false;
   let ready = false;             // po uporządkowaniu przerwanych nagrań
+  let keepUntil = 0;             // klipy zaczęte przed tą chwilą są zachowywane
+  let impactLabel = { text: '', until: 0 };
 
   const settings = () => Storage_.settings();
   // Z zapasem 2 s, bo klip bywa o ułamek sekundy dłuższy lub krótszy od ustawionego
@@ -41,6 +45,7 @@
     const unit = Math.min(width, height) / 18;
     const data = Measure.overlay();
     const lines = [
+      { size: unit * 1.2, text: Date.now() < impactLabel.until ? impactLabel.text : '' },
       { size: unit * 1.7, text: data.speed + ' km/h    średnia ' + data.average + ' km/h' },
       { size: unit * 0.85, text: data.measurement },
       { size: unit * 0.75, text: data.date + (data.position ? '    ' + data.position : '') },
@@ -73,7 +78,7 @@
     const clip = {
       id: String(now), startedAt: now, endedAt: now, size: 0,
       mime: (media.mimeType || type || 'video/webm').split(';')[0],
-      width: canvas.width, height: canvas.height, saved: false, finished: false,
+      width: canvas.width, height: canvas.height, saved: now < keepUntil, finished: false,
     };
     const entry = { media, clip, seq: 0, queue: Promise.resolve() };
 
@@ -119,7 +124,11 @@
       endClip(old);
       current = beginClip();
     }
-    saveButton.textContent = 'Zapisz';
+    showSaved();
+  }
+
+  function showSaved() {
+    saveButton.textContent = current?.clip.saved ? '✓ Zachowane' : 'Zapisz';
   }
 
   function tick() {
@@ -201,7 +210,7 @@
         if (mine === generation) fail('Kamera została wyłączona przez telefon');
       });
       box.hidden = false;
-      saveButton.textContent = 'Zapisz';
+      showSaved();
       el('recording-state').textContent = '';
       navigator.storage?.persist?.().catch(() => {});
     } catch (err) {
@@ -215,18 +224,35 @@
     }
   }
 
-  function keep(entry) {
-    entry.clip.saved = true;
-    entry.queue = entry.queue.then(() => VideoStore.setSaved(entry.clip.id, true)).catch(storageFailed);
+  // Zmiany trafiają do kolejki klipu, więc nie wyprzedzą ich zapisy obrazu
+  function keep(entry, changes = {}) {
+    const update = { ...changes, saved: true };
+    Object.assign(entry.clip, update);
+    entry.queue = entry.queue.then(() => VideoStore.update(entry.clip.id, update)).catch(storageFailed);
   }
 
   // Zachowany klip nie jest nadpisywany przez pętlę
+  function protect(changes) {
+    keep(current, changes);
+    if (previous && Date.now() - current.clip.startedAt < NEAR_START_S * 1000) keep(previous);
+    showSaved();
+  }
+
   function save() {
     if (!current) return;
-    keep(current);
-    if (previous && Date.now() - current.clip.startedAt < NEAR_START_S * 1000) keep(previous);
-    saveButton.textContent = '✓ Zachowane';
+    protect();
     UI.toast('Nagranie zostanie zachowane — znajdziesz je w zakładce Nagrania');
+  }
+
+  // Zwraca false, gdy nic nie jest nagrywane
+  function impact(force) {
+    if (!current) return false;
+    const now = Date.now();
+    // Jeśli klip zaraz się skończy, zachowujemy też następny
+    keepUntil = now + AFTER_IMPACT_S * 1000;
+    impactLabel = { text: 'UDERZENIE ' + force.toFixed(1).replace('.', ',') + ' g', until: now + IMPACT_LABEL_MS };
+    protect({ impact: Math.max(current.clip.impact || 0, Math.round(force * 10) / 10) });
+    return true;
   }
 
   // ---------- Okno podglądu ----------
@@ -251,6 +277,7 @@
   window.addEventListener('pageshow', () => start());
 
   root.Recorder = {
+    impact,
     async init() {
       try {
         await VideoStore.recover();

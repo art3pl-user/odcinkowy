@@ -4,7 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
   <title>Pomiar odcinkowy</title>
-  <meta name="theme-color" content="#000000">
+  <meta name="theme-color" content="#070a12">
+  <script>
+    // Zapamiętany motyw ustawiamy przed narysowaniem strony
+    try { document.documentElement.dataset.theme = localStorage.getItem('odcinkowy.theme') || 'night'; }
+    catch (e) { document.documentElement.dataset.theme = 'night'; }
+  </script>
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -16,20 +21,59 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body data-view="measure">
+  <div id="splash">
+    <div class="splash-inner">
+      <div class="splash-logo">
+      <svg viewBox="0 0 100 100" aria-hidden="true">
+        <defs><linearGradient id="gold" x1="0" y1="1" x2="1" y2="0">
+          <stop offset="0" stop-color="#a87b32"/><stop offset="0.55" stop-color="#f3dca6"/><stop offset="1" stop-color="#c59a4f"/>
+        </linearGradient></defs>
+        <path d="M21.7 78.3 A40 40 0 1 1 78.3 78.3" fill="none" stroke="url(#gold)" stroke-width="7" stroke-linecap="round"/>
+        <path d="M50 50 L70 28" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="50" cy="50" r="7" fill="url(#gold)"/>
+      </svg>
+      </div>
+      <p class="splash-name">ODCINKOWY</p>
+      <p class="splash-tagline">pomiar · ostrzeżenia · rejestrator</p>
+      <div id="splash-news" class="splash-news" hidden>
+        <p id="splash-news-title"></p>
+        <ul id="splash-notes"></ul>
+      </div>
+      <p id="splash-status" role="status">Uruchamiam…</p>
+      <div id="splash-bar" class="busy" role="progressbar" aria-label="Postęp" aria-valuemin="0" aria-valuemax="100"><span></span></div>
+      <button id="splash-go" type="button" hidden>Rozpocznij</button>
+      <button id="splash-later" type="button" hidden>Później</button>
+      <p id="splash-version"></p>
+    </div>
+  </div>
+
   <header>
     <button id="menu-button" type="button" aria-label="Menu" aria-controls="menu" aria-expanded="false">
       <span></span><span></span><span></span>
     </button>
     <p id="title">Odcinkowy pomiar</p>
+    <button id="theme-toggle" type="button">
+      <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5Z"/></svg>
+    </button>
   </header>
 
   <div id="backdrop" hidden></div>
   <nav id="menu">
-    <a href="#pomiar" data-tab="measure">Odcinkowy pomiar</a>
-    <a href="#historia" data-tab="history">Historia</a>
-    <a href="#nagrania" data-tab="recordings">Nagrania</a>
-    <a href="#odcinki" data-tab="database">Baza odcinków</a>
-    <a href="#konfiguracja" data-tab="settings">Konfiguracja</a>
+    <p class="brand">ODCINKOWY</p>
+    <a href="#pomiar" data-tab="measure"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 18.5a9.5 9.5 0 1 1 15 0M12 13l4-4.5"/><circle cx="12" cy="13" r="1.5"/></svg>Odcinkowy pomiar</a>
+    <a href="#historia" data-tab="history"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>Historia</a>
+    <a href="#nagrania" data-tab="recordings"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2.5"/><path d="m16 10 5-3v10l-5-3"/></svg>Nagrania</a>
+    <a href="#odcinki" data-tab="database"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.8-6.5-11a6.5 6.5 0 0 1 13 0c0 5.2-6.5 11-6.5 11Z"/><circle cx="12" cy="10" r="2.3"/></svg>Baza odcinków</a>
+    <a href="#konfiguracja" data-tab="settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2.2"/><circle cx="8" cy="17" r="2.2"/></svg>Konfiguracja</a>
+    <div class="menu-theme">
+      <p>Motyw</p>
+      <div class="segmented" role="group" aria-label="Motyw">
+        <button type="button" data-theme-choice="day">Dzień</button>
+        <button type="button" data-theme-choice="night">Noc</button>
+        <button type="button" data-theme-choice="auto">Auto</button>
+      </div>
+    </div>
   </nav>
 
   <div id="alert" role="alert" hidden>
@@ -41,16 +85,36 @@
     <div class="readings">
       <section class="panel current">
         <h1>Prędkość</h1>
-        <div class="value" id="speed">--</div>
-        <div class="unit">km/h</div>
+        <div class="gauge">
+          <div class="dial">
+            <svg viewBox="0 0 200 200" aria-hidden="true">
+              <defs><linearGradient id="gauge-gold" x1="0" y1="1" x2="1" y2="0">
+                <stop offset="0" class="stop-a"/><stop offset="1" class="stop-b"/>
+              </linearGradient></defs>
+              <g transform="rotate(135 100 100)" fill="none">
+                <circle class="track" cx="100" cy="100" r="88" stroke-dasharray="414.7 1000"/>
+                <circle class="ticks" cx="100" cy="100" r="74" stroke-dasharray="0.8 21.74 0.8 21.74 0.8 21.74 0.8 21.74 0.8 21.74 0.8 21.74 0.8 21.74 0.8 21.74 0.8 21.74 0.8 21.74 0.8 21.74 0.8 21.74 0.8 21.74 0.8 21.74 0.8 21.74 0.8 21.74 0.8 21.74 0.8 21.74 0.8 21.74 0.8 21.74 0.8 1000" pathLength="586.4"/>
+                <circle id="gauge-value" cx="100" cy="100" r="88" stroke="url(#gauge-gold)"/>
+              </g>
+            </svg>
+            <div class="reading">
+              <div class="value" id="speed">--</div>
+              <div class="unit">km/h</div>
+            </div>
+          </div>
+        </div>
         <p class="status" id="status" role="status">Szukam sygnału GPS…</p>
       </section>
 
       <section class="panel average">
         <h2>Średnia z odcinka</h2>
-        <div class="value" id="average">--</div>
-        <div class="unit">km/h</div>
-        <p class="details"><span id="distance">0,00 km</span> · <span id="time">00:00</span></p>
+        <div class="average-box">
+          <p><span class="value" id="average">--</span> <span class="unit">km/h</span></p>
+        </div>
+        <dl class="stats">
+          <div><dt>Dystans</dt><dd id="distance">0,00 km</dd></div>
+          <div><dt>Czas</dt><dd id="time">00:00</dd></div>
+        </dl>
       </section>
 
       <div id="camera" hidden>
@@ -148,7 +212,18 @@
   </main>
 
   <main id="view-settings" hidden>
-    <section>
+    <div class="column">
+    <section class="group">
+      <h2>Wygląd</h2>
+      <div class="segmented" role="group" aria-label="Motyw">
+        <button type="button" data-theme-choice="day">Dzień</button>
+        <button type="button" data-theme-choice="night">Noc</button>
+        <button type="button" data-theme-choice="auto">Auto</button>
+      </div>
+      <p class="note">Auto przełącza motyw o wschodzie i zachodzie słońca w Twojej okolicy.</p>
+    </section>
+
+    <section class="group">
       <h2>Odcinki i sygnały</h2>
       <label class="check"><input id="setting-auto" type="checkbox">
         <span>Uruchamiaj pomiar automatycznie, gdy mijam początek odcinka, i kończ po minięciu końca</span></label>
@@ -165,6 +240,9 @@
         </select></label>
       <button id="alert-test" class="action" type="button">Sprawdź sygnał</button>
 
+    </section>
+
+    <section class="group">
       <h2>Wideorejestrator</h2>
       <label class="check"><input id="setting-recording" type="checkbox">
         <span>Nagrywaj wideo w pętli, gdy aplikacja jest otwarta (bez dźwięku)</span></label>
@@ -184,9 +262,25 @@
           <option value="5">5</option>
           <option value="11">11</option>
         </select></label>
+      <label class="check">
+        <span>Czułość wykrywania uderzenia</span>
+        <select id="setting-impact">
+          <option value="0">Wyłączone</option>
+          <option value="1.5">Bardzo wysoka (1,5 g)</option>
+          <option value="2">Wysoka (2 g)</option>
+          <option value="2.5">Średnia (2,5 g)</option>
+          <option value="3.5">Niska (3,5 g)</option>
+          <option value="5">Bardzo niska (5 g)</option>
+        </select></label>
+      <p id="impact-state" class="preview"></p>
+      <button id="impact-reset" class="action" type="button">Wyzeruj odczyt wstrząsu</button>
+      <p class="note">Po wykryciu uderzenia trwające nagranie jest automatycznie zachowywane. Im wyższa czułość, tym słabszy wstrząs wystarczy. Jeśli zapisują się nagrania po dziurach i progach, zmniejsz czułość.</p>
       <p id="recording-state" class="preview" role="status"></p>
       <p class="note">Minuta nagrania zajmuje około 19 MB. Starsze nagrania są usuwane, chyba że naciśniesz „Zapisz” przy podglądzie lub „Zachowaj” w zakładce Nagrania. Nagrywanie zatrzymuje się po zminimalizowaniu aplikacji.</p>
 
+    </section>
+
+    <section class="group">
       <h2>Korekta prędkości</h2>
       <div class="stepper">
         <button id="correction-minus" type="button" aria-label="Zmniejsz o 1 km/h">−</button>
@@ -197,22 +291,36 @@
       <button id="correction-reset" type="button">Wyzeruj</button>
       <p class="note">Wartość jest dodawana do aktualnej i średniej prędkości. Na postoju zawsze widać 0. Dystans i czas się nie zmieniają. Każdy pomiar w Historii zachowuje korektę z chwili zapisu.</p>
     </section>
+
+    <section class="group">
+      <h2>O aplikacji</h2>
+      <p id="about-version" class="note"></p>
+      <button id="about-update" class="action" type="button">Sprawdź aktualizacje</button>
+      <button id="about-news" class="action" type="button">Co nowego</button>
+    </section>
+    </div>
   </main>
 
   <div id="toast" role="status" hidden></div>
 
   <script src="vendor/leaflet/leaflet.js"></script>
+  <script src="version.js"></script>
+  <script src="sun.js"></script>
   <script src="tracker.js"></script>
   <script src="route.js"></script>
   <script src="sections.js"></script>
   <script src="storage.js"></script>
   <script src="ui.js"></script>
+  <script src="theme.js"></script>
+  <script src="startup.js"></script>
   <script src="alerts.js"></script>
   <script src="database.js"></script>
   <script src="measure.js"></script>
   <script src="videostore.js"></script>
   <script src="recorder.js"></script>
   <script src="recordings.js"></script>
+  <script src="impact.js"></script>
+  <script src="motion.js"></script>
   <script src="history.js"></script>
   <script src="app.js"></script>
 </body>

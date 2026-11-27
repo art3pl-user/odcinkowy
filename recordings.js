@@ -14,7 +14,8 @@
   const megabytes = (bytes) => (bytes / 1e6).toFixed(0) + ' MB';
   const title = (clip) => UI.date(clip.startedAt) + ', ' + UI.clock(clip.startedAt);
   const details = (clip) => UI.duration((clip.endedAt - clip.startedAt) / 1000) + ' · ' +
-    megabytes(clip.size) + (clip.saved ? ' · zachowane' : ' · w pętli');
+    megabytes(clip.size) + (clip.saved ? ' · zachowane' : ' · w pętli') +
+    (clip.impact ? ' · ⚠ uderzenie ' + clip.impact.toFixed(1).replace('.', ',') + ' g' : '');
 
   function node(tag, className, text) {
     const element = document.createElement(tag);
@@ -129,7 +130,7 @@
     if (!selected) return;
     const { clip } = selected;
     try {
-      await VideoStore.setSaved(clip.id, !clip.saved);
+      await VideoStore.update(clip.id, { saved: !clip.saved });
       clip.saved = !clip.saved;
       showSelected();
       refresh();

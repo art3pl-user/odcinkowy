@@ -5,7 +5,11 @@
   const STALE_MS = 5000;      // po tylu ms bez odczytu prędkość znika z ekranu
   const AUTOSAVE_MS = 5000;   // co ile zapisywać trwający pomiar
 
+  const GAUGE_MAX = 180;      // km/h
+  const GAUGE_ARC = 414.7;    // długość łuku 270° o promieniu 88
+
   const { el } = UI;
+  const gaugeEl = el('gauge-value');
   const speedEl = el('speed');
   const averageEl = el('average');
   const distanceEl = el('distance');
@@ -46,6 +50,10 @@
     const fresh = Date.now() - receivedAt < STALE_MS;
     const speed = fresh ? Route.corrected(tracker.speedKmh(), correction) : null;
     speedEl.textContent = UI.speed(speed);
+    // Łuk zegara: pełny przy GAUGE_MAX km/h
+    const part = Math.min(1, (speed || 0) / GAUGE_MAX);
+    gaugeEl.style.strokeDasharray = (part * GAUGE_ARC).toFixed(1) + ' 1000';
+    gaugeEl.style.opacity = part > 0 ? 1 : 0;
 
     const s = tracker.section();
     averageEl.textContent = UI.speed(s ? Route.corrected(s.averageKmh, correction) : null);
@@ -60,7 +68,7 @@
 
     if (receivedAt && !fresh) {
       setStatus('Brak sygnału GPS', true);
-      Alerts.hide();
+      Alerts.hideSections();
     }
   }
 
@@ -244,6 +252,7 @@
     const accepted = tracker.update(fix);
     if (accepted) {
       receivedAt = Date.now();
+      Theme.setPosition(fix.lat, fix.lon);
       setStatus('GPS: dokładność ±' + Math.round(c.accuracy) + ' m');
       if (trip) {
         recordPoint();
@@ -348,6 +357,7 @@
       Storage_.saveCorrection(correction);
       render();
     },
+    measuring: () => Boolean(trip),
     // Teksty nanoszone na nagranie wideo
     overlay() {
       const now = Date.now();

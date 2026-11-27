@@ -8,7 +8,7 @@
   const SETTINGS_KEY = 'odcinkowy.settings';
   const DEFAULTS = {
     auto: false, sound: true, approachM: 800,
-    recording: false, clipMinutes: 5, loopClips: 2, mapHidden: false,
+    recording: false, clipMinutes: 5, loopClips: 2, impactG: 2.5, mapHidden: false, theme: 'auto',
   };
 
   let dbPromise = null;

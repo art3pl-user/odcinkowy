@@ -63,6 +63,7 @@
   // ---------- Konfiguracja ----------
 
   function renderSettings() {
+    el('impact-state').textContent = Motion.describe();
     const correction = Measure.correction();
     el('correction').textContent = (correction > 0 ? '+' : '') + correction;
     el('correction-minus').disabled = correction <= -Route.MAX_CORRECTION;
@@ -94,30 +95,56 @@
 
   const recording = el('setting-recording');
   recording.checked = Boolean(Storage_.settings().recording);
-  recording.addEventListener('change', () => Recorder.setEnabled(recording.checked));
+  recording.addEventListener('change', () => {
+    Recorder.setEnabled(recording.checked);
+    Motion.update(true);
+    renderSettings();
+  });
   for (const [id, name] of [['setting-clip', 'clipMinutes'], ['setting-loop', 'loopClips']]) {
     const select = el(id);
     select.value = String(Storage_.settings()[name]);
     select.addEventListener('change', () => Storage_.setSetting(name, Number(select.value)));
   }
 
+  const impact = el('setting-impact');
+  impact.value = String(Storage_.settings().impactG);
+  impact.addEventListener('change', () => {
+    Storage_.setSetting('impactG', Number(impact.value));
+    Motion.resetPeak();
+    Motion.update(true);
+    renderSettings();
+  });
+  el('impact-reset').addEventListener('click', () => {
+    Motion.resetPeak();
+    renderSettings();
+  });
+
   setInterval(() => {
     if (!el('view-settings').hidden) renderSettings();
   }, 1000);
 
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').catch(console.error);
-  }
+  el('about-version').textContent = 'Wersja ' + RELEASE.version + ' z ' + RELEASE.date;
+  el('about-news').addEventListener('click', Startup.showNews);
+  // Sprawdzenie odbywa się na ekranie startowym, więc uruchamiamy aplikację od nowa
+  el('about-update').addEventListener('click', () => {
+    if (Measure.measuring()) UI.toast('Najpierw zatrzymaj pomiar');
+    else location.reload();
+  });
 
   window.addEventListener('hashchange', route);
-  // Najpierw porządkujemy przerwane pomiary, potem pozwalamy zacząć nowy
-  Storage_.recoverTrips()
+  // Najpierw ekran startowy (aktualizacje) i porządek w przerwanych pomiarach,
+  // dopiero potem GPS i kamera
+  route();
+  Startup.run()
+    .then(() => Storage_.recoverTrips())
     .catch(console.error)
     .then(() => {
       Database.load().catch(console.error);
       Measure.init();
       route();
       Recorder.init();
+      Motion.update(false);
+      if (Motion.needsTap()) UI.toast('Dotknij ekranu, aby włączyć wykrywanie uderzeń');
       el('toggle').disabled = false;
     });
 })();

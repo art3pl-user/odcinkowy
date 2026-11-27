@@ -11,6 +11,7 @@
     start: [[660, 0, 0.2], [990, 0.24, 0.5]],
     end: [[990, 0, 0.2], [660, 0.24, 0.5]],
     abandon: [[330, 0, 0.5]],
+    impact: [[1200, 0, 0.15], [1200, 0.2, 0.15], [1200, 0.4, 0.4]],
   };
 
   let audio = null;
@@ -99,10 +100,18 @@
         hide();
       }
     },
-    hide,
+    // Po utracie GPS chowamy komunikaty o odcinkach, ale nie o uderzeniu
+    hideSections() {
+      if (banner.className !== 'impact') hide();
+    },
+    impact(force) {
+      signal('impact');
+      show('impact', 'Wykryto uderzenie ' + force, 'Nagranie zostało zachowane');
+      holdUntil = Date.now() + 5000;
+    },
     // Komunikat o końcu odcinka znika także wtedy, gdy samochód stoi
     tick() {
-      if (Date.now() >= holdUntil && ['end', 'abandon'].includes(banner.className)) hide();
+      if (Date.now() >= holdUntil && ['end', 'abandon', 'impact'].includes(banner.className)) hide();
     },
     test() {
       unlock();

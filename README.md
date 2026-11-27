@@ -2,6 +2,15 @@
 
 Aplikacja PWA: https://art3pl-user.github.io/odcinkowy/
 
+## Wydawanie nowej wersji
+
+1. Zmień numer i listę nowości w `version.js` oraz `VERSION` w `sw.js`.
+2. `node tools/release.js` (sprawdza spójność i tworzy `version.json`).
+3. Commit i push.
+
+Bez zmiany numeru telefony **nie pobiorą** zmienionych plików aplikacji.
+Baza odcinków (`data/*.json`) aktualizuje się bez nowego wydania.
+
 ## Wspólna baza odcinków
 
 | Plik | Zawartość |

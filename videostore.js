@@ -55,12 +55,12 @@
       return new Blob(chunks.map((c) => c.blob), { type: clip.mime });
     },
 
-    // Zmienia pole "zachowane" bez nadpisywania reszty opisu
-    setSaved: (id, saved) => run('clips', 'readwrite', (tx) => {
+    // Zmienia wybrane pola (np. "zachowane") bez nadpisywania reszty opisu
+    update: (id, changes) => run('clips', 'readwrite', (tx) => {
       const store = tx.objectStore('clips');
       const request = store.get(id);
       request.onsuccess = () => {
-        if (request.result) store.put({ ...request.result, saved });
+        if (request.result) store.put({ ...request.result, ...changes });
       };
     }),
 
